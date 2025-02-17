@@ -1,0 +1,303 @@
+#!/usr/bin/env expect
+#
+# @(!--#) @(#) syncdir.exp, sversion 0.1.0, fversion 005, 04-august-2024
+#
+# an expect script to keep a remote directory in "write" sync with the current local directory
+#
+
+# ################################################## #
+
+proc usage {} {
+  global progname
+
+  send_error "$progname: usage: $progname --host hostname/ip_address \[ --port ssh_port# ] --user username --pass password --rdir remote_directory\n"
+
+  exit 2
+}
+
+# ################################################## #
+
+#
+# Main
+#
+
+# get program/script name
+set progname [file tail $argv0]
+
+# print usage message if no command line arguments
+if {[llength $argv] < 1} {
+  usage
+}
+
+# ### Command line argument processing and checking ############################
+
+# set default command line arguments
+set hostname ""
+set sshport "22"
+set username ""
+set password ""
+set remotedir ""
+
+# process command line arguments
+set argc [llength $argv]
+set i 0
+while {$i < $argc} {
+  set arg [lindex $argv $i]
+
+  if {[string equal $arg "--host"]} {
+    incr i
+    if {$i >= $argc} {
+      send_error "$progname: expecting hostname/ip_address after \"--host\" command line argument\n"
+      exit 1
+    }
+    set hostname [lindex $argv $i]
+  } elseif {[string equal $arg "--user"]} {
+    incr i
+    if {$i >= $argc} {
+      send_error "$progname: expecting username after \"--user\" command line argument\n"
+      exit 1
+    }
+    set username [lindex $argv $i]
+  } elseif {[string equal $arg "--port"]} {
+    incr i
+    if {$i >= $argc} {
+      send_error "$progname: expecting ssh port after \"--port\" command line argument\n"
+      exit 1
+    }
+    set sshport [lindex $argv $i]
+  } elseif {[string equal $arg "--pass"]} {
+    incr i
+    if {$i >= $argc} {
+      send_error "$progname: expecting password after \"--pass\" command line argument\n"
+      exit 1
+    }
+    set password [lindex $argv $i]
+  } elseif {[string equal $arg "--rdir"]} {
+    incr i
+    if {$i >= $argc} {
+      send_error "$progname: expecting remote directory after \"--rdir\" command line argument\n"
+      exit 1
+    }
+    set remotedir [lindex $argv $i]
+  } else {
+    send_error "$progname: unexpected command line flag/argument \"$arg\"\n"
+    usage
+  }
+
+  incr i
+}
+
+# see if the password is of the form [ENVVAR]
+if {[string length $password] >= 3} {
+  if {[string compare [string index $password 0] "\["] == 0} {
+    if {[string compare [string index $password [expr [string length $password] - 1]] "]"] == 0} {
+      set passwordenv [string range $password 1 [expr [string length $password] - 2]]
+
+      if {[catch {set password $env($passwordenv)}] != 0} {
+        send_error "$progname: the password environment variable \"$passwordenv\" is not set for host $hostname\n"
+        exit 1
+      }
+    }
+  }
+}
+
+# create a star version of the password
+set starpassword ""
+for {set i 1} {$i <= [string length $password]} {incr i} {
+  set starpassword "[set starpassword]*"
+}
+
+# diagnostic output (note that the switch password output is the "star" version
+puts "Hostname/IP ........: \"$hostname\""
+puts "ssh port# ..........: \"$sshport\""
+puts "Username ...........: \"$username\""
+puts "Password ...........: \"$starpassword\""
+puts "Remote directory ...: \"$remotedir\""
+
+# check we have non-null values for the command line options
+if {$hostname == ""} {
+  send_error "$progname: the hostname/ip_address was not specified or is the null/empty string)\n"
+  exit 1
+}
+if {$sshport == ""} {
+  send_error "$progname: the ssh port# was not specified or is the null/empty string)\n"
+  exit 1
+}
+if {$username == ""} {
+  if {[catch {set username $env(LOGNAME)}] != 0} {
+    send_error "$progname: unable to determine the username from the environment variable LOGNAME\n"
+    exit 1
+  }
+}
+if {$password == ""} {
+  send_error "$progname: the password was not specified or is the null/empty string)\n"
+  exit 1
+}
+if {$remotedir == ""} {
+  send_error "$progname: the remote directory was not specified or is the null/empty string)\n"
+  exit 1
+}
+
+# ### Spawn sftp command and get logged in #####################################
+
+spawn sftp -P [set sshport]  [set username]@[set hostname]
+
+set passcount 0
+
+while {1} {
+  expect {
+    timeout {
+      send_error "\n$progname: timeout during sftp command login sequence\n"
+      exit 1
+    }
+    eof {
+      send_error "\n$progname: eof during sftp command login sequence\n"
+      exit 1
+    }
+    "Are you sure you want to continue connecting (yes/no/?fingerprint?)? " {
+      send "yes\r"
+    }
+    " password: " {
+      incr passcount
+      if {$passcount > 1} {
+        send_error "$progname: password already entered once - maybe it is wrong?\n"
+        exit 1
+      }
+      send "$password\r"
+    }
+    "sftp> " {
+      break
+    }
+  }
+}
+
+# ### Change to the remote directory and make sure the change worked ###########
+
+send "cd [set remotedir]\r"
+
+expect {
+  timeout {
+    send_error "\n$progname: timeout after sending cd sftp command\n"
+    exit 1
+  }
+  eof {
+    send_error "\n$progname: eof after sending cd sftp command\n"
+    exit 1
+  }
+  "sftp> " {
+    # fall through
+  }
+}
+
+send "pwd\r"
+
+set reportedpwd 0
+
+while {1} {
+  expect {
+    timeout {
+      send_error "\n$progname: timeout during sftp command login sequence\n"
+      exit 1
+    }
+    eof {
+      send_error "\n$progname: eof during sftp command login sequence\n"
+      exit 1
+    }
+    "Remote working directory: [set remotedir]" {
+      set reportedpwd 1
+    }
+    "sftp> " {
+      break
+    }
+  }
+}
+
+if {$reportedpwd != 1} {
+  send_error "\n$progname: the cd command did not appear to work - check --rdir remotae directory name\n"
+  exit 1
+}
+
+# ### Main body ################################################################
+
+set keepalive 0
+
+while {1} {
+  set filelist [glob -nocomplain -types f *]
+
+  set currenttime [clock seconds]
+
+  # puts "Current time: $currenttime"
+
+  set updatecount 0
+
+  foreach file $filelist {
+    set mt [file mtime $file]
+    # puts "$file $mt"
+
+    if {[expr $currenttime - $mt] <= 1} {
+      # puts "File $file was recently modified"
+
+      send "put $file\r"
+
+      incr updatecount
+
+      expect {
+        timeout {
+          send_error "\n$progname: timeout after sending put command\n"
+          exit 1
+        }
+        eof {
+          send_error "\n$progname: eof after sending put command\n"
+          exit 1
+        }
+        "sftp> " {
+          after 1000
+        }
+      }
+    }
+  }
+
+
+  if {$updatecount == 0} {
+    incr keepalive
+
+    if {$keepalive >= 120} {
+      send "pwd\r"
+
+      expect {
+        timeout {
+          send_error "\n$progname: timeout after sending pwd command as a keep alive\n"
+          exit 1
+        }
+        eof {
+          send_error "\n$progname: eof after sending pwd command as a keep alive\n"
+          exit 1
+        }
+        "sftp> " {
+          # fall through
+        }
+      }
+
+      set keepalive 0
+    }
+
+  }
+  after 1000
+}
+
+# ### Close down sftp session and exit #########################################
+
+send "bye\r"
+
+expect {
+  timeout {
+    send_error "\n$progname: timeout waiting for eof after bye command sent\n"
+    exit 1
+  }
+  eof {
+    # fall through
+  }
+}
+
+# if control gets here then exit with success
+exit 0
