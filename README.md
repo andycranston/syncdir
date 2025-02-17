@@ -1,4 +1,4 @@
-# syncdir - an expect script to keep a remote directory updated with changes made in a local directory
+# syncdir - synchronise file content from a local directory to remote directory using an automated sftp session
 
 ## Setup
 
