@@ -26,7 +26,7 @@ On a terminal window on the local Linux system run:
 
 ```
 cd /path/to/local/directory
-syncdir --host remotehost --user username --pass password --rdir /path/to/remote/directory
+syncdir -h remotehost -u username -p password -r /path/to/remote/directory
 ```
 
 Output should be similar to:
@@ -86,13 +86,12 @@ Good question. If you need to keep remote files in sync with a local
 source then the rsync command is an excellent option.
 
 The syncdir expect script was written for a specific usage case of editing
-(and possibly compiling) source code on one system and having the update
+(and possibly compiling) source code on one system and having the updated
 source and recompiled code ready for execution on a remote system within
 seconds. This is handy when the remote system, for example, does not
 have a compiler installed and installing the compiler on the remote
 system is not possible (e.g. no root/sudo like access is available on
 the remote system).
-
 
 ----------------
 End of README.md

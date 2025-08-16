@@ -1,6 +1,6 @@
 #!/usr/bin/env expect
 #
-# @(!--#) @(#) syncdir.exp, sversion 0.1.0, fversion 005, 04-august-2024
+# @(!--#) @(#) syncdir.exp, sversion 0.1.0, fversion 006, 16-august-2025
 #
 # an expect script to keep a remote directory in "write" sync with the current local directory
 #
@@ -10,9 +10,23 @@
 proc usage {} {
   global progname
 
-  send_error "$progname: usage: $progname --host hostname/ip_address \[ --port ssh_port# ] --user username --pass password --rdir remote_directory\n"
+  send_error "$progname: usage: $progname \[ -d ] -h hostname/ip_address \[ -s ssh_port# ] \[ -u username ] -p password -r remote_directory\n"
 
   exit 2
+}
+
+# ################################################## #
+
+proc starpassword {password} {
+  set star ""
+
+  set lenpassword [string length $password]
+
+  for {set i 0} {$i < $lenpassword} {incr i} {
+    append star "*"
+  }
+
+  return $star
 }
 
 # ################################################## #
@@ -25,57 +39,59 @@ proc usage {} {
 set progname [file tail $argv0]
 
 # print usage message if no command line arguments
-if {[llength $argv] < 1} {
+if {$argc == 0} {
   usage
 }
 
 # ### Command line argument processing and checking ############################
 
 # set default command line arguments
+set debug 0
 set hostname ""
-set sshport "22"
+set sshport 22
 set username ""
 set password ""
 set remotedir ""
 
 # process command line arguments
-set argc [llength $argv]
 set i 0
 while {$i < $argc} {
   set arg [lindex $argv $i]
 
-  if {[string equal $arg "--host"]} {
+  if {$arg == "-d"} {
+    set debug 1
+  } elseif {[string equal $arg "-h"]} {
     incr i
     if {$i >= $argc} {
-      send_error "$progname: expecting hostname/ip_address after \"--host\" command line argument\n"
+      send_error "$progname: expecting hostname/ip_address after -h command line argument\n"
       exit 1
     }
     set hostname [lindex $argv $i]
-  } elseif {[string equal $arg "--user"]} {
+  } elseif {[string equal $arg "-u"]} {
     incr i
     if {$i >= $argc} {
-      send_error "$progname: expecting username after \"--user\" command line argument\n"
+      send_error "$progname: expecting username after -u command line argument\n"
       exit 1
     }
     set username [lindex $argv $i]
-  } elseif {[string equal $arg "--port"]} {
+  } elseif {[string equal $arg "-s"]} {
     incr i
     if {$i >= $argc} {
-      send_error "$progname: expecting ssh port after \"--port\" command line argument\n"
+      send_error "$progname: expecting ssh port after -s command line argument\n"
       exit 1
     }
     set sshport [lindex $argv $i]
-  } elseif {[string equal $arg "--pass"]} {
+  } elseif {[string equal $arg "-p"]} {
     incr i
     if {$i >= $argc} {
-      send_error "$progname: expecting password after \"--pass\" command line argument\n"
+      send_error "$progname: expecting password after -p command line argument\n"
       exit 1
     }
     set password [lindex $argv $i]
-  } elseif {[string equal $arg "--rdir"]} {
+  } elseif {[string equal $arg "-r"]} {
     incr i
     if {$i >= $argc} {
-      send_error "$progname: expecting remote directory after \"--rdir\" command line argument\n"
+      send_error "$progname: expecting remote directory after -rdir command line argument\n"
       exit 1
     }
     set remotedir [lindex $argv $i]
@@ -101,18 +117,15 @@ if {[string length $password] >= 3} {
   }
 }
 
-# create a star version of the password
-set starpassword ""
-for {set i 1} {$i <= [string length $password]} {incr i} {
-  set starpassword "[set starpassword]*"
-}
-
 # diagnostic output (note that the switch password output is the "star" version
-puts "Hostname/IP ........: \"$hostname\""
-puts "ssh port# ..........: \"$sshport\""
-puts "Username ...........: \"$username\""
-puts "Password ...........: \"$starpassword\""
-puts "Remote directory ...: \"$remotedir\""
+if {$debug} {
+  puts "Debug flag .........: \"$debug\""
+  puts "Hostname/IP ........: \"$hostname\""
+  puts "ssh port# ..........: \"$sshport\""
+  puts "Username ...........: \"$username\""
+  puts "Password ...........: \"[starpassword $password]\""
+  puts "Remote directory ...: \"$remotedir\""
+}
 
 # check we have non-null values for the command line options
 if {$hostname == ""} {
