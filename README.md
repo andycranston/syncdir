@@ -74,6 +74,52 @@ as file on the local Linux system.
 Each time a file is created or modified on the local Linux system that
 file will be copied using a sftp put command onto the remote Linux system.
 
+## Command line arguments
+
+### Command line argument -d
+
+Specifying the `-d` command line argument turns on debugging
+output. Useful for trouble shooting.
+
+### Command line argument -h
+
+Specifies the host to login to. This can be a resolveable hostname or
+an IP address.
+
+This is a required command line argument.
+
+### Command line argument -s
+
+Specifies an alternative port number to use for the ssh connection.
+
+Defaults to 22 which is the well known port number for ssh.
+
+### Command line argument -u
+
+Specifies the username to login as. Defaults to the value held
+in the environment variable `LOGNAME`.
+
+### Command line argument -p
+
+Specifies the password to user to login as. Can be the password in plain text.
+
+However, if the value is enclosed in brackets ([ ... ]) then the enclosed
+value is taken as an environment variable name and the content of the environment
+variable is used as the password.
+
+Defaults to `[PW]` so the default action is to use the value of environment
+variable `PW` as the password.
+
+# Command line argument -r
+
+Specifies a remote directory to change to after successfully logging in.
+
+This must be a full pathname.
+
+By default it will be `/var/tmp/` followed by the basename of the local current
+directory. So if the local current directory is `/home/andyc/nfs/projects/syncdir` then
+the default remote directory will be `/var/tmp/syncdir`.
+
 ## Stopping the syncdir expect script
 
 Just type Control^C to stop the syncdir expect script. A more graceful
