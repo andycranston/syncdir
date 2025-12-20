@@ -1,6 +1,6 @@
 #!/usr/bin/env expect
 #
-# @(!--#) @(#) syncdir.exp, sversion 0.1.0, fversion 006, 16-august-2025
+# @(!--#) @(#) syncdir.exp, sversion 0.1.0, fversion 007, 20-december-2025
 #
 # an expect script to keep a remote directory in "write" sync with the current local directory
 #
@@ -49,9 +49,11 @@ if {$argc == 0} {
 set debug 0
 set hostname ""
 set sshport 22
-set username ""
-set password ""
-set remotedir ""
+if {[catch {set username $env(LOGNAME)}] != 0} {
+  set username ""
+}
+set password "\[PW]"
+set remotedir "/var/tmp/[file tail [pwd]]"
 
 # process command line arguments
 set i 0
