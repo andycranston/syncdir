@@ -110,7 +110,7 @@ variable is used as the password.
 Defaults to `[PW]` so the default action is to use the value of environment
 variable `PW` as the password.
 
-# Command line argument -r
+### Command line argument -r
 
 Specifies a remote directory to change to after successfully logging in.
 
@@ -131,13 +131,13 @@ for a file called STOP with a file size of zero.
 Good question. If you need to keep remote files in sync with a local
 source then the rsync command is an excellent option.
 
-The syncdir expect script was written for a specific usage case of editing
-(and possibly compiling) source code on one system and having the updated
-source and recompiled code ready for execution on a remote system within
-seconds. This is handy when the remote system, for example, does not
-have a compiler installed and installing the compiler on the remote
-system is not possible (e.g. no root/sudo like access is available on
-the remote system).
+The syncdir expect script was written for a specific usage case of
+editing (and possibly compiling) source code on one system and having
+the updated source and recompiled code ready for execution on a remote
+system within seconds. This is handy when the remote system, for example,
+does not have a compiler installed and installing the compiler on the
+remote system is not possible (e.g. no root/sudo/doas like access is
+available on the remote system).
 
 ----------------
 End of README.md
