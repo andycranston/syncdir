@@ -22,7 +22,7 @@ The syncdir expect script can now be run.
 
 ## First use
 
-On a terminal window on the local Linux system run:
+On the local Linux system open a terminal window and run:
 
 ```
 cd /path/to/local/directory
@@ -41,15 +41,16 @@ Remote working directory: /path/to/remote/directory
 sftp>
 ```
 
-On a terminal window on the remote Linux system run:
+On the remote Linux system open a terminal window and run:
 
 ```
 cd /path/to/remote/directory
 ```
 
-On a second terminal window on the local Linux system run:
+Back on the local Linux system open a second terminal window and run:
 
 ```
+cd /path/to/remote/directory
 date > testfile.txt
 ```
 
@@ -120,9 +121,14 @@ By default it will be `/var/tmp/` followed by the basename of the local current
 directory. So if the local current directory is `/home/andyc/nfs/projects/syncdir` then
 the default remote directory will be `/var/tmp/syncdir`.
 
+## Keep alive
+
+To keep the scp connection "alive" the `syncdir` script will send a `pwd` command
+every few minutes.
+
 ## Stopping the syncdir expect script
 
-Just type Control^C to stop the syncdir expect script. A more graceful
+Just type Control^C to stop the `syncdir` expect script. A more graceful
 way to stop the script may be added at a future date such as looking
 for a file called STOP with a file size of zero.
 
