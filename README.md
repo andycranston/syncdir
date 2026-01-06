@@ -50,7 +50,7 @@ cd /path/to/remote/directory
 Back on the local Linux system open a second terminal window and run:
 
 ```
-cd /path/to/remote/directory
+cd /path/to/local/directory
 date > testfile.txt
 ```
 
@@ -72,8 +72,10 @@ cat testfile.txt
 The content of this file on the remote Linux system should be the same
 as file on the local Linux system.
 
-Each time a file is created or modified on the local Linux system that
-file will be copied using a sftp put command onto the remote Linux system.
+Each time a file is created or modified on the local Linux system
+in directory `/path/to/local/directory` that
+file will be copied using a sftp put command onto the remote Linux system into directory
+`/path/to/remote/directory`.
 
 ## Command line arguments
 
