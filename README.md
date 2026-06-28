@@ -97,6 +97,26 @@ Specifies an alternative port number to use for the ssh connection.
 
 Defaults to 22 which is the well known port number for ssh.
 
+### Command line argument -o
+
+The sftp command line option string. Specifies additional command line options to the sftp command.
+
+For example:
+
+```
+syncdir -o "-J user@jumphost.domain.local" -h buggles
+```
+
+will pass the command line options:
+
+```
+-J user@jumphost.domain.local
+```
+
+to the sftp command.
+
+By default no additional command line options are passed to the sftp command.
+
 ### Command line argument -u
 
 Specifies the username to login as. Defaults to the value held
@@ -110,8 +130,8 @@ However, if the value is enclosed in brackets ([ ... ]) then the enclosed
 value is taken as an environment variable name and the content of the environment
 variable is used as the password.
 
-Defaults to `[PW]` so the default action is to use the value of environment
-variable `PW` as the password.
+By default no password is specified. However, of no password is required and the sftp command
+prompts for a password then this will generate an error.
 
 ### Command line argument -r
 
